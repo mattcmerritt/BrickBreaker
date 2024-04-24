@@ -30,6 +30,7 @@ public class CollisionHandler {
 				}
 			}
 			else if (axis == Axis.Y) {
+				// TODO: rewrite to use the relevant calculations
 				if (ball.getYDirection() == Direction.UP) {
 					ball.setYLocation(paddle.getYLocation() + paddle.getHeight());
 					ball.setYDirection(Direction.DOWN);

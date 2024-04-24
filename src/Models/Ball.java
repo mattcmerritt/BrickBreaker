@@ -5,19 +5,25 @@ import java.awt.Graphics2D;
 
 import SwingShapes.Rectangle;
 import Utils.Direction;
+import Utils.Vector;
 
 public class Ball {
 	private Rectangle ball;
-	private Direction xDirection;
-	private Direction yDirection;
+	// note: 
+	//	swing only uses integers to determine where to show the pixels of an shape
+	//	the vectors use floating point components to represent the exact movement directions
+	// 	to better calculate the position of the ball, the exact position of the ball should be tracked
+	// 	and used when calculating movements, and then rounded for the rendering.
+	private Vector trueLocation;
+	private Vector movementVector;
 	private int speed = 4;
 	
 	public Ball() {
 		ball = new Rectangle();
 		ball.setColor(Color.black);
 		ball.setSize(10,  10);
-		xDirection = Direction.LEFT;
-		yDirection = Direction.UP;
+		trueLocation = new Vector(ball.getXLocation(), ball.getYLocation());
+		movementVector = new Vector(Direction.LEFT.getVelocity(), Direction.UP.getVelocity());
 	}
 	
 	public int getXLocation() {
@@ -36,20 +42,26 @@ public class Ball {
 		ball.setLocation(ball.getXLocation(), yLocation);
 	}
 	
+	// determines the direction based on the movement vector
 	public Direction getXDirection() {
-		return xDirection;
+		return movementVector.getXComponent() < 0 ? Direction.DOWN : Direction.UP;
 	}
 
+	// performs a strictly elastic collision sending the ball off in the desired direction
 	public void setXDirection(Direction xDirection) {
-		this.xDirection = xDirection;
+		// reverse the directional component if not going in the desired direction
+		if (getXDirection() != xDirection) movementVector.setXComponent(-1 * movementVector.getXComponent());
 	}
 
+	// determines the direction based on the movement vector
 	public Direction getYDirection() {
-		return yDirection;
+		return movementVector.getYComponent() < 0 ? Direction.DOWN : Direction.UP;
 	}
 
+	// performs a strictly elastic collision sending the ball off in the desired direction
 	public void setYDirection(Direction yDirection) {
-		this.yDirection = yDirection;
+		// reverse the directional component if not going in the desired direction
+		if (getYDirection() != yDirection) movementVector.setYComponent(-1 * movementVector.getYComponent());
 	}
 	
 	public int getWidth() {
@@ -65,13 +77,19 @@ public class Ball {
 	}
 	
 	public void moveX() {
-		int amountToMoveX = xDirection.getVelocity() * speed;
-		ball.setLocation(ball.getXLocation() + amountToMoveX, ball.getYLocation());
+		double amountToMoveX = movementVector.getXComponent() * speed;
+		trueLocation.setXComponent(trueLocation.getXComponent() + amountToMoveX);
+
+		// move the ball as close to the true position as possible
+		ball.setLocation(trueLocation.getXComponentRounded(), ball.getYLocation());
 	}
 	
 	public void moveY() {
-		int amountToMoveY = yDirection.getVelocity() * speed;
-		ball.setLocation(ball.getXLocation(), ball.getYLocation() + amountToMoveY);
+		double amountToMoveY = movementVector.getYComponent() * speed;
+		trueLocation.setYComponent(trueLocation.getYComponent() + amountToMoveY);
+
+		// move the ball as close to the true position as possible
+		ball.setLocation(ball.getXLocation(), trueLocation.getYComponentRounded());
 	}
 	
 	public void draw(Graphics2D g) {
